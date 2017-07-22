@@ -1,0 +1,80 @@
+---
+title: "Market Basket Analysis"
+author: "Sally Kai Tien Lin"
+date: "7/22/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Load exported clean data set
+```{r message = FALSE}
+setwd("~/Desktop")
+Top_item<-read.csv("~/Desktop/MyData.csv")
+```
+or call from global environment
+```{r message = FALSE}
+mydata <- Top_item
+```
+#Loading arules package
+```{r message = FALSE}
+library(arules)
+library(arulesViz)
+library(datasets)
+```
+
+```{r message = FALSE}
+mydata$Cat<-as.factor(mydata$Cat)
+mydata<-mydata[mydata$Cat!=c("OTHER"),]
+```
+
+#See first 10 observations
+```{r message = FALSE}
+head(mydata, n=10)
+```
+#Split data
+```{r message = FALSE}
+dt <- split(mydata$Cat, mydata$InvoiceNo)
+```
+
+#Convert data to transaction level
+```{r message = TRUE}
+dt2 <- as(dt,"transactions")
+summary(dt2)
+inspect(head(dt2,5))
+```
+
+#Most Frequent Items
+```{r message = FALSE}
+itemFrequency(dt2, type = "relative")
+itemFrequencyPlot(dt2,topN = 5)
+```
+
+#aggregated data
+```{r}
+rules = apriori(dt2, parameter=list(support=0.01, confidence=0.8, maxlen = 4,minlen = 3))
+```
+#Convert rules into data frame
+```{r message = FALSE}
+rules3 = as(rules, "data.frame")
+```
+and
+```{r}
+write(rules, "~/Desktop/ARule2.csv", sep=",")
+```
+#Show only particular product rules
+```{r}
+inspect(head(sort(subset(rules, subset = rhs %pin% "SIGN" ),by="lift"),10))
+```
+
+#Show the top 10 rules
+```{r}
+options(digits=2)
+inspect(head(sort(rules[1:40],by="lift"),10))
+```
+#Get Summary Information
+```{r}
+plot(rules)
+summary(rules)
+```
